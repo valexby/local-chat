@@ -1,9 +1,4 @@
-import sys
-
-import urwid
-
 from chat.cli.interface import ChatInterface
-from chat.cli.dialog import CheckListDialog
 from chat import netutils
 
 
@@ -11,13 +6,12 @@ class ChatClient(ChatInterface):
     def __init__(self):
         super().__init__()
         interfaces = netutils.get_ifaces_info()
-        exit_code, iface = CheckListDialog(
-            'Choose interface', 15, 40, interfaces.keys()).show()
-        if exit_code != 0:
-            sys.exit(0)
+        iface = choose_interface_dialog(list(interfaces.keys()))
         self._msg_client = netutils.BroadcastClient(iface, self._recieve_msg)
         self.add_message('System', 'Starting local chat using `%s` interface. Your '
                          'IP address is `%s`' % (iface, interfaces[iface]['addr']))
+
+
 
     def _recieve_msg(self, sender, message):
         if message.startswith('\msg '):
@@ -41,3 +35,15 @@ class ChatClient(ChatInterface):
     def _stop_program_logics(self):
         self._msg_client.send_msg('\disconnect ')
         self._msg_client.stop()
+
+
+def choose_interface_dialog(interfaces):
+    while True:
+        for i, interface in enumerate(interfaces):
+            print("{}) {}".format(i + 1, interface))
+        choosen = input("Choose interface: ")
+        if choosen.isdecimal():
+            choosen = int(choosen)
+            if choosen >= 1 and choosen <= len(interfaces):
+                break
+    return interfaces[choosen - 1]
