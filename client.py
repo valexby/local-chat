@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
 import time
+import logging
+import netutils
 
-from chat import netutils
-
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s: %(message)s')
+LOG = logging.getLogger(__name__)
 
 class ChatClient(object):
     def __init__(self):
@@ -33,12 +38,12 @@ class ChatClient(object):
             self._start_program_logics()
             while True:
                 command = input()
-                if command.startswith('-msg ') or not command.startswith('-'):
-                    self._msg_client.send_msg(command)
-                    print_message('You', command[5:])
                 if command.startswith('-list '):
                     for client in self._connected_clients:
                         print("==> {}".format(client))
+                else:
+                    self._msg_client.send_msg("-msg " + command)
+                    print_message('You', command)
 
         except KeyboardInterrupt:
             self.stop()
@@ -52,10 +57,12 @@ class ChatClient(object):
         self._msg_client.send_msg('\\disconnect ')
         self._msg_client.stop()
 
+
 def print_message(source, message):
     cur_time = time.strftime('%H:%M:%S')
     text = '{} {} ==> {}'.format(source, cur_time, message)
     print(text)
+
 
 def choose_interface_dialog(interfaces):
     while True:
@@ -67,3 +74,12 @@ def choose_interface_dialog(interfaces):
             if choosen >= 1 and choosen <= len(interfaces):
                 break
     return interfaces[choosen - 1]
+
+
+def main():
+    chat = ChatClient()
+    chat.run()
+
+
+if __name__ == '__main__':
+    main()
