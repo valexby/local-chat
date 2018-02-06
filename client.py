@@ -16,29 +16,29 @@ class ChatClient(object):
         interfaces = netutils.get_ifaces_info()
         iface = choose_interface_dialog(list(interfaces.keys()))
         self._msg_client = netutils.BroadcastClient(iface, self._recieve_msg)
-        print_message('System', 'Starting local chat using `%s` interface. Your '
-                         'IP address is `%s`' % (iface, interfaces[iface]['addr']))
+        print_message('System', 'Starting local chat using {} interface. Your '
+                         'IP address is `{}`'.format(iface, interfaces[iface]['addr']))
 
     def _recieve_msg(self, sender, message):
         if message.startswith('-msg '):
             message = message[5:]
             print_message(sender, message)
-        elif message.startswith('-connect '):
+        elif message == '-connect':
             self._connected_clients.add(sender)
-            self._msg_client.send_msg('-connect-reply ')
-            print_message('System', 'Client `%s` has become online' % sender)
-        elif message.startswith('-connect-reply '):
+            self._msg_client.send_msg('-connect-reply')
+            print_message('System', 'Client `{}` has become online'.format(sender))
+        elif message == '-connect-reply':
             self._connected_clients.add(sender)
-        elif message.startswith('-disconnect '):
+        elif message == '-disconnect':
             self._connected_clients.discard(sender)
-            print_message('System', 'Client `%s` has gone offline' % sender)
+            print_message('System', 'Client `{}` has gone offline'.format(sender))
 
     def run(self):
         try:
-            self._start_program_logics()
+            self.start()
             while True:
                 command = input()
-                if command.startswith('-list '):
+                if command.strip() == '-list':
                     for client in self._connected_clients:
                         print("==> {}".format(client))
                 else:
@@ -49,12 +49,12 @@ class ChatClient(object):
             self.stop()
 
 
-    def _start_program_logics(self):
+    def start(self):
         self._msg_client.start()
-        self._msg_client.send_msg('\\connect ')
+        self._msg_client.send_msg('-connect')
 
     def stop(self):
-        self._msg_client.send_msg('\\disconnect ')
+        self._msg_client.send_msg('-disconnect')
         self._msg_client.stop()
 
 
