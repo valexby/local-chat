@@ -32,8 +32,8 @@ class ChatInterface(object):
 
     def __init__(self):
         self._messages = []
-        self._connected_clients = []
-        self._main_loop = urwid.MainLoop(self._init_interface(), self._palette)
+        self._connected_clients = set()
+        # self._main_loop = urwid.MainLoop(self._init_interface(), self._palette)
         self._cmd_dispatcher = CommandDispatcher(self)
 
     def _init_interface(self):
@@ -53,20 +53,30 @@ class ChatInterface(object):
 
     def _command_entered(self, edit, text):
         if not text.startswith('\\'):
-            text = '\msg ' + text
+            text = '\\msg ' + text
         text = text[1:]
         self._cmd_dispatcher.onecmd(text)
 
     def run(self):
         try:
-            self._start_program_logics()
-            self._main_loop.run()
+            # self._start_program_logics()
+            # self._main_loop.run()
+            while True:
+                command = input()
+                if not command.startswith('\\'):
+                    command = '\\msg ' + command
+                command = command[1:]
+                self._cmd_dispatcher.onecmd(command)
         except KeyboardInterrupt:
-            self._stop_program_logics()
+            pass
+            # self._stop_program_logics()
 
     def stop(self):
         self._stop_program_logics()
-        self._stop_main_loop()
+
+    def print_peers(self):
+        for client in self._connected_clients:
+            print("==> {}".format(client))
 
     def _start_program_logics(self):
         pass
@@ -74,24 +84,13 @@ class ChatInterface(object):
     def _stop_program_logics(self):
         pass
 
-    def _stop_main_loop(self, *args, **kwargs):
-        raise urwid.ExitMainLoop()
-
     def add_message(self, source, message):
         cur_time = time.strftime('%H:%M:%S')
-        text = '%16s %s ==> %s\n' % (source, cur_time, message)
-        self._messages.insert(0, urwid.Text(text))
+        text = '{} {} ==> {}'.format(source, cur_time, message)
+        print(text)
 
     def add_client(self, client):
-        text = ' %s' % client
-        if text not in (item.text for item in self._connected_clients):
-            self._connected_clients.append(urwid.Text(text))
+        self._connected_clients.add(client)
 
     def remove_client(self, client):
-        try:
-            text = ' %s' % client
-            client_pos = [
-                item.text for item in self._connected_clients].index(text)
-            del self._connected_clients[client_pos]
-        except ValueError:
-            pass
+        self._connected_clients.discard(client)

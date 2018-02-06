@@ -25,6 +25,8 @@ class BroadcastClient:
         self.interface = interface
         self.ip = ni.ifaddresses(interface)[ni.AF_INET][0]['addr']
         self.broadcast_ip = ni.ifaddresses(interface)[ni.AF_INET][0]['broadcast']
+        if self.broadcast_ip[-1] == '1':
+            self.broadcast_ip = self.broadcast_ip[:-1] + '255'
         self.port = port
         self.callback = callback
 

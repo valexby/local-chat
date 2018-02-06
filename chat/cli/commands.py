@@ -1,5 +1,4 @@
 import cmd
-import urwid
 
 
 class CommandDispatcherBase(cmd.Cmd):
@@ -20,15 +19,12 @@ class CommandDispatcherBase(cmd.Cmd):
         txt = 'Command not recognized: `%s`.' % line
         self._interface.add_message('System', txt)
 
-    def do_exit(self, line):
-        self._interface.stop()
-
-    def do_help(self, line):
-        pass
-
 
 class CommandDispatcher(CommandDispatcherBase):
     def do_msg(self, line):
         message = '\msg %s' % line
         self._interface._msg_client.send_msg(message)
         self._interface.add_message('You', line)
+
+    def do_list(self, _):
+        self._interface.print_peers()
