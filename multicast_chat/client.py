@@ -13,6 +13,7 @@ class ChatClient(object):
         super().__init__()
         self._connected_clients = set()
         self._messages = []
+        self._ban_list = set()
         interfaces = netutils.get_ifaces_info()
         iface = choose_interface_dialog(list(interfaces.keys()))
         self._msg_client = netutils.BroadcastClient(iface, self._recieve_msg)
@@ -20,6 +21,8 @@ class ChatClient(object):
                          'IP address is `{}`'.format(iface, interfaces[iface]['addr']))
 
     def _recieve_msg(self, sender, message):
+        if sender in self._ban_list:
+            return
         if message.startswith('-msg '):
             message = message[5:]
             print_message(sender, message)
@@ -41,6 +44,10 @@ class ChatClient(object):
                 if command.strip() == '-list':
                     for client in self._connected_clients:
                         print("==> {}".format(client))
+                elif command.startswith('-ban '):
+                    banned = command[5:].strip()
+                    self._ban_list.add(banned)
+                    self._connected_clients.discard(banned)
                 else:
                     self._msg_client.send_msg("-msg " + command)
                     print_message('You', command)
